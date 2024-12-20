@@ -1,5 +1,14 @@
 name: Rust Workflow
 
+stages:
+  - build
+  - publish
+
+.parallel:   
+  parallel:
+    matrix:
+      - BUILD_TARGET [release, debug, publish]:
+
 on:
   pull_request:
     branches: [ "main" ]
@@ -13,13 +22,15 @@ env:
 
 jobs:
   build:
+    .extends: .parallel
+    .stage: build
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
     - name: Build
-      run: cargo build --release --verbose
+      run: cargo build --${BUILD_TARGET}
     - name: Run tests
-      run: cargo test --release --verbose
+      run: cargo test --${BUILD_TARGET}
     - name: Upload Telegram Bot
       uses: actions/upload-artifact@v4
       with:
@@ -32,25 +43,36 @@ jobs:
         path: target/release/cndk8
 
   ### copilot helped here, lets see how many commits it takes to make it work:
-  publish:
+  publish: 
     if: github.ref == 'refs/heads/main' 
     # if: github.ref == 'refs/heads/main' && secrets.X_TOKEN != ''
     environment: publishing
     needs: build
+    extends: .publish
+    stage: publish
     runs-on: ubuntu-latest
     steps:
     - name: Set token environment variable
       run: echo "X_TOKEN=${{ secrets.X_TOKEN }}" >> $GITHUB_ENV
+    - name: Display structure of downloaded files
+      run: ls -lahR && pwd
     - name: Download artifact
       uses: actions/download-artifact@v4
       with:
-        name: cndk8-telegram-bot 
-        path: ./telegram
+        name: cndk8-hello
+        path: ./cndk8
+    - name: Download telegram 
+      uses: actions/download-artifact@v4
+      with:
+        name: cndk8-telegram-bot
+        path: ./cndk8
 
+    - name: display files after download
+      run: ls -lahR && pwd
     - name: Publish to GitHub Packages
       run: |
         curl -u "${{ github.actor }}:${{ secrets.GH_TOKEN }}" \
-          -X POST "https://uploads.github.com/repos/${{ github.repository }}/releases/assets?name=cndk8.tar.gz" \
+          -X POST "https://uploads.github.com/repos/${{ github.repository }}/releases/assets?name=cndk8-hello.tar.gz" \
           --header "Content-Type: application/gzip" \
           --data-binary @./binary/cndk8-hello
 
