@@ -2,6 +2,12 @@
 name = "cndk8"
 version = "0.1.0"
 edition = "2021"
+description = "cndk8 is a collection of tools for my Second Brain."
+homepage = "https://foursixnine.io/projects/cndk8/"
+repository = "https://github.com/foursixnine/cndk8"
+keywords = ["bots", "Second Brain"]
+categories = ["command-line-utilities"]
+license = "GPL-3.0-only"
 
 [lib]
 path = "src/lib/mod.rs"
@@ -17,6 +23,7 @@ exclude = ["mi_acta_bot", "lab/", "duplicate_detection", "url_manager"]
 
 
 [dependencies]
+clap = { version = "4.5.0", features = ["derive"] }
 rand = "0.8.5"
 rand_pcg = "0.3.1"
 rand_seeder = "0.3.0"
