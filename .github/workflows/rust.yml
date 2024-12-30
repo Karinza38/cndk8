@@ -72,17 +72,17 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build binaries in "release" mode
         run: cargo build -r 
-      - name: Download hello app
-        uses: actions/download-artifact@v4
-        with:
-          name: cndk8-hello
-          path: ./cndk8-hello
       - name: Display files after download
         run: ls -lahR && pwd
       - name: "Package for crates.io"
         run: cargo package
       - name: "Publish to crates.io"
         run: cargo publish
+      - name: Download hello app
+        uses: actions/download-artifact@v4
+        with:
+          name: cndk8-hello
+          path: ./cndk8-hello
       - name: Publish hello app to GitHub Packages
         run: |
           curl -u "${{ github.actor }}:${{ secrets.GH_TOKEN }}" \
