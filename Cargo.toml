@@ -5,7 +5,7 @@ edition = "2021"
 description = "cndk8 is a collection of tools for my Second Brain."
 homepage = "https://foursixnine.io/projects/cndk8/"
 repository = "https://github.com/foursixnine/cndk8"
-keywords = ["bots", "Second Brain"]
+keywords = ["bots", "SecondBrain", "teloxide-bots", "telegram"]
 categories = ["command-line-utilities"]
 license = "GPL-3.0-only"
 
