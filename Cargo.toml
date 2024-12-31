@@ -19,7 +19,7 @@ name = "rng"
 [workspace]
 name = "cndk8-tools"
 members = ["telegram"]
-exclude = ["mi_acta_bot", "lab/", "duplicate_detection", "url_manager"]
+exclude =  ["duplicate_detection", "managers/"]
 
 
 [dependencies]
