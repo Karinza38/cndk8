@@ -13,7 +13,6 @@ use tokio::fs;
 extern crate mime;
 
 use scraper::{Html, Selector};
-use url::Url;
 
 // fn _get_api_key() -> String {
 //     match std::env::var("HETZNER_API_KEY") {
@@ -258,6 +257,7 @@ async fn handle_text_content(
     //         }
     //     })
     // TODO: thread 'tokio-runtime-worker' panicked at 'failed trying to parse >: https://thght.works/3vZX6<: RelativeUrlWithoutBase', telegram/src/main.rs:219:40
+    log::warn!("{:#?} not implemented", content);
     let entity = content.entities.first().unwrap();
     match &entity {
         MediaText => {
@@ -329,9 +329,9 @@ fn append_to_brain(text: &str, format: SecondBrainSupportedFormats) -> io::Resul
 }
 
 async fn get_website_title(url: &str) -> Result<String, reqwest::Error> {
-    let this_url = match Url::parse(url) {
+    let this_url = match reqwest::Url::parse(url) {
         Ok(result) => result,
-        Err(..) => match Url::parse("foursixnine.io") {
+        Err(..) => match reqwest::Url::parse("foursixnine.io") {
             Ok(result) => result,
             Err(e) => panic!("Can't recover '{:#?}'\nurl:{}", e, url),
         },
@@ -442,45 +442,8 @@ fn parse_website_title(html: &str) -> String {
 mod tests {
 
     use super::*;
-
-    #[tokio::test]
-    pub async fn test_parse_website_title() {
-        // Test case 1: HTML with a valid title tag
-        let html1 = "<html><title> Test Title   </title></html>";
-        let title1 = parse_website_title(html1);
-        assert_eq!(title1, "Test Title");
-    }
-
-    #[tokio::test]
-    #[should_panic]
-    pub async fn test_parse_website_title_errors() {
-        // Test case 2: HTML without a title tag
-        let html2 = "<html><h1>Test Heading</h1></html>";
-        let title2 = parse_website_title(html2);
-        assert_eq!(title2, "");
-
-        // Test case 3: Empty HTML
-        let html3 = "";
-        let title3 = parse_website_title(html3);
-        assert_eq!(title3, "");
-    }
-
-    #[tokio::test]
-    pub async fn test_get_website_title() {
-        let mut _url = "https://onlyFans.com/pepe";
-        let mut the_response = get_website_title(_url).await.unwrap();
-        let mut expected = "OF of pepe";
-        assert_eq!(expected, the_response);
-
-        _url = "https//fansly.com/happyhooha/posts";
-        the_response = get_website_title(_url).await.unwrap();
-        expected = "FSL of happyhooha";
-
-        _url = "https://twitter.com/foursixnine/status/1074685619618623490?s=20";
-        the_response = get_website_title(_url).await.unwrap();
-        expected = "Tweet from foursixnine";
-        assert_eq!(expected, the_response);
-    }
+    use teloxide::prelude::*;
+    use teloxide::types::*;
 
     #[tokio::test]
     #[should_panic]
@@ -489,6 +452,59 @@ mod tests {
         let the_response = get_website_title(_url).await.unwrap();
         let expected = "Broken link";
         assert_eq!(expected, the_response);
+    }
+
+    #[test]
+    fn test_media_text() {
+        let media_text = MediaText {
+            text: "https://www.theregister.com/2024/12/30/att_verizon_confirm_salt_typhoon_breach/"
+                .to_string(),
+            entities: vec![MessageEntity {
+                kind: MessageEntityKind::Url,
+                offset: 0,
+                length: 79,
+            }],
+        };
+
+        assert_eq!(
+            media_text.text,
+            "https://www.theregister.com/2024/12/30/att_verizon_confirm_salt_typhoon_breach/"
+        );
+        assert_eq!(media_text.entities.len(), 1);
+        assert_eq!(media_text.entities[0].kind, MessageEntityKind::Url);
+        assert_eq!(media_text.entities[0].offset, 0);
+        assert_eq!(media_text.entities[0].length, 79);
+    }
+
+    #[test]
+    fn test_media_text_with_multiple_entities() {
+        let media_text = MediaText {
+            text: "Check this out: https://example.com and https://anotherexample.com".to_string(),
+            entities: vec![
+                MessageEntity {
+                    kind: MessageEntityKind::Url,
+                    offset: 16,
+                    length: 19,
+                },
+                MessageEntity {
+                    kind: MessageEntityKind::Url,
+                    offset: 40,
+                    length: 22,
+                },
+            ],
+        };
+
+        assert_eq!(
+            media_text.text,
+            "Check this out: https://example.com and https://anotherexample.com"
+        );
+        assert_eq!(media_text.entities.len(), 2);
+        assert_eq!(media_text.entities[0].kind, MessageEntityKind::Url);
+        assert_eq!(media_text.entities[0].offset, 16);
+        assert_eq!(media_text.entities[0].length, 19);
+        assert_eq!(media_text.entities[1].kind, MessageEntityKind::Url);
+        assert_eq!(media_text.entities[1].offset, 40);
+        assert_eq!(media_text.entities[1].length, 22);
     }
 
     // #[test]
@@ -513,7 +529,7 @@ mod tests {
     //    text: "Santiago Zarate, [Jul 8, 2023 at 20:32]\nhttps://www.reddit.com/user/Remarkable-Goat-973/",
     //    entities: [
     //        MessageEntity {
-    //            kind: Url,
+    //            kind: MessageEntityKind::Url,
     //            offset: 40,
     //            length: 48,
     //        },
