@@ -442,7 +442,7 @@ fn parse_website_title(html: &str) -> String {
 mod tests {
 
     use super::*;
-    use teloxide::prelude::*;
+    use teloxide::types::MessageEntityKind::*;
     use teloxide::types::*;
 
     #[tokio::test]
@@ -507,6 +507,43 @@ mod tests {
         assert_eq!(media_text.entities[1].length, 22);
     }
 
+    #[test]
+    fn test_media_text_with_many_entities() {
+        let media_text = MediaText {
+    text: "Five whys (or 5 whys) is an iterative interrogative technique used to explore the cause-and-effect relationships underlying a particular problem.[1] The primary goal of the technique is to determine the root cause of a defect or problem by repeating the question \"why?\" five times, each time directing the current \"why\" to the answer of the previous \"why\". The method asserts that the answer to the fifth \"why\" asked in this manner should reveal the root cause of the problem.[2]".to_string(),
+    entities: [
+        MessageEntity {
+            kind: Bold,
+            offset: 28,
+            length: 33,
+        },
+        MessageEntity {
+            kind: TextLink {
+                url: reqwest::Url::parse("https://helpfulprofessor.com/cause-and-effect-examples/").unwrap(),
+                    },
+            offset: 82,
+            length: 16,
+        },
+        MessageEntity {
+            kind: TextLink {
+                url: reqwest::Url::parse("https://en.wikipedia.org/wiki/Five_whys").unwrap(),
+            },
+            offset: 315,
+            length: 3,
+        },
+        MessageEntity {
+            kind: Italic,
+            offset: 406,
+            length: 3,
+        },
+    ].to_vec()
+};
+        assert_eq!(
+            media_text.text,
+            "Five whys (or 5 whys) is an iterative interrogative technique used to explore the cause-and-effect relationships underlying a particular problem.[1] The primary goal of the technique is to determine the root cause of a defect or problem by repeating the question \"why?\" five times, each time directing the current \"why\" to the answer of the previous \"why\". The method asserts that the answer to the fifth \"why\" asked in this manner should reveal the root cause of the problem.[2]"
+        );
+        assert_eq!(media_text.entities.len(), 4);
+    }
     // #[test]
     // fn test_process_header_mimetype() {
     //     // let mut map = HeaderMap::new();
