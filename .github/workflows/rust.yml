@@ -37,6 +37,33 @@ jobs:
         run: cargo test 
       - name: Run tests in debug mode for Telegram bot project
         run: cargo test -p telegram
+  build_nightly:
+    needs: build
+    runs-on: ubuntu-latest
+    outputs:
+      release_built: ${{ steps.set-output.outputs.release_built }}
+    steps:
+      - name: ⚡ Cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+      - uses: actions/checkout@v4
+      - name: Ouput rust version for educational purposes
+        run: rustup --version
+      - name: Temporarily modify the rust toolchain version 
+        run: rustup override set nightly
+      - name: Build binaries in debug mode
+        run: cargo build
+      - name: Run tests in debug mode
+        run: cargo test 
+      - name: Run tests in debug mode for Telegram bot project
+        run: cargo test -p telegram
+      - name: revert the override 
+        run: rustup override set nightly
   publish:
     if: startsWith(github.ref, 'refs/tags/')
     # Check if the branch is main
