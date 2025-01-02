@@ -269,12 +269,8 @@ async fn handle_text_content(
             log::debug!("plain text is: {}", markdown);
             !todo!("Proper implementation for MediaText is still missing");
         }
-        Url => {
-            !todo!("Proper implementation is still missing for URL");
-        }
     }
     log::debug!("found {}", content.entities.len());
-    Ok(())
 }
 
 //             let text_url = &content.text[entity.offset..entity.length];
@@ -312,6 +308,37 @@ async fn handle_text_content(
 
 enum SecondBrainSupportedFormats {
     Markdown,
+}
+
+use teloxide::types::MessageEntityKind::*;
+use teloxide::types::*;
+
+fn process_media_text(text: MediaText) -> String {
+    let mut markdown = String::new();
+    for entity in text.entities.iter() {
+        match entity.kind {
+            MessageEntityKind::Bold => {
+                log::debug!("bold: : {:#?}", text.text);
+            }
+            MessageEntityKind::Italic => {
+                log::debug!("italic: : {:#?}", text.text);
+            }
+            MessageEntityKind::Url => {
+                markdown.push_str(&format!("{text} -[{}]({})\n", text.text, text.text));
+            }
+            _ => {
+                log::debug!("generic : {:#?}, {:#?}", text.text, entity.kind)
+            }
+        }
+        let format = match entity.kind {
+            MessageEntityKind::Bold => "bold",
+            MessageEntityKind::Italic => "italic",
+            MessageEntityKind::Url => "link",
+            _ => "plain",
+        };
+        markdown.push_str(&format!("{}: [{}]({})\n", format, "foo", "bar"));
+    }
+    markdown
 }
 
 // TODO: needs refactoring.
@@ -494,10 +521,6 @@ mod tests {
             ],
         };
 
-        assert_eq!(
-            media_text.text,
-            "Check this out: https://example.com and https://anotherexample.com"
-        );
         assert_eq!(media_text.entities.len(), 2);
         assert_eq!(media_text.entities[0].kind, MessageEntityKind::Url);
         assert_eq!(media_text.entities[0].offset, 16);
@@ -505,6 +528,12 @@ mod tests {
         assert_eq!(media_text.entities[1].kind, MessageEntityKind::Url);
         assert_eq!(media_text.entities[1].offset, 40);
         assert_eq!(media_text.entities[1].length, 22);
+
+        let simple_markdown = process_media_text(media_text);
+        assert_eq!(
+            simple_markdown,
+            "Check this out: https://example.com and https://anotherexample.com"
+        );
     }
 
     #[test]
@@ -537,12 +566,14 @@ mod tests {
             length: 3,
         },
     ].to_vec()
-};
+    };
         assert_eq!(
             media_text.text,
             "Five whys (or 5 whys) is an iterative interrogative technique used to explore the cause-and-effect relationships underlying a particular problem.[1] The primary goal of the technique is to determine the root cause of a defect or problem by repeating the question \"why?\" five times, each time directing the current \"why\" to the answer of the previous \"why\". The method asserts that the answer to the fifth \"why\" asked in this manner should reveal the root cause of the problem.[2]"
         );
         assert_eq!(media_text.entities.len(), 4);
+        let markdown = process_media_text(media_text);
+        assert_eq!(markdown, "Hello world");
     }
     // #[test]
     // fn test_process_header_mimetype() {
