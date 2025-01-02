@@ -18,8 +18,8 @@ name = "rng"
 
 [workspace]
 name = "cndk8-tools"
-members = ["telegram"]
-exclude =  ["duplicate_detection", "managers/"]
+members = ["telegram", "managers/second_brain"]
+exclude =  ["duplicate_detection",]
 
 
 [dependencies]
