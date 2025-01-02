@@ -1,6 +1,5 @@
+use crate::managers::second_brain::second_brain_manager::*;
 use reqwest::{header::*, Error};
-use std::fs::OpenOptions;
-use std::io::{self, Write};
 use teloxide::{
     dispatching::{dialogue, dialogue::InMemStorage, UpdateHandler},
     net::Download,
@@ -208,7 +207,7 @@ async fn handle_photo_content(
     log::debug!("will insert:");
     log::debug!("{}", markdown);
     // log::info!("object: {:#?}", full_url);
-    match append_to_brain(&markdown, SecondBrainSupportedFormats::Markdown) {
+    match SecondBrainManager.append_to_brain(&markdown, SecondBrainSupportedFormats::Markdown) {
         Ok(()) => {
             bot.send_message(chat_id, "Saved photo!")
                 .reply_to_message_id(message_id)
@@ -249,7 +248,7 @@ async fn handle_text_content(
     log::warn!("{:#?} not implemented", content);
     log::debug!("found {}", content.entities.len());
     //    !todo!("Proper implementation for MediaText is still missing");
-    append_to_brain(&markdown, SecondBrainSupportedFormats::Markdown)?;
+    SecondBrainManager::append_to_brain(&markdown, SecondBrainSupportedFormats::Markdown)?;
     Ok(())
 }
 
@@ -303,20 +302,6 @@ async fn process_media_text(text: MediaText) -> String {
         markdown.push_str(&format!("{}: [{}]({})\n", format, "foo", "bar"));
     }
     markdown
-}
-
-// TODO: needs refactoring.
-// TODO: ultimately, this will be part of SecondBrainManager api, so becomes only a call with just
-// markdown text to add.
-fn append_to_brain(text: &str, format: SecondBrainSupportedFormats) -> io::Result<()> {
-    let brain_location = get_brain_location();
-    let mut file = OpenOptions::new()
-        .append(true)
-        .open(brain_location)
-        .unwrap();
-    file.write_all(text.as_bytes())
-        .expect("failed to write/append to brain");
-    Ok(())
 }
 
 async fn get_website_title(url: &str) -> Result<String, reqwest::Error> {
