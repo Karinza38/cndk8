@@ -231,80 +231,27 @@ async fn handle_text_content(
 
     let content = message_text.unwrap();
     log::info!("text: {}", content.text);
-    // log::debug!("object: {:#?}", content);
-    // this for loop might not be needed at all.
-    //     for entity in content.entities.iter().filter(|e| match Some(&e.kind) {
-    //         Some(MessageEntityKind::Url) => true,
-    //         Some(MediaText) => {
-    //             log::info!(
-    //                 "{} {}: {:#?}, {:#?},",
-    //                 chat_id,
-    //                 "MessageEntityKind Type not implemented yet properly for MediaText",
-    //                 e.kind,
-    //                 MediaText
-    //             );
-    //             true
-    //         } // Some(MessageEntityKind::TextLink) => true,
-    //         _ => {
-    //             log::info!(
-    //                 "{} {}: {:#?}",
-    //                 chat_id,
-    //                 "MessageEntityKind Type not implemented",
-    //                 e
-    //             );
-    //             log::debug!("{:#?} not implemented", e.kind);
-    //             false
-    //         }
-    //     })
+
     // TODO: thread 'tokio-runtime-worker' panicked at 'failed trying to parse >: https://thght.works/3vZX6<: RelativeUrlWithoutBase', telegram/src/main.rs:219:40
-    log::warn!("{:#?} not implemented", content);
     let entity = content.entities.first().unwrap();
-    match &entity {
+    let mut markdown = String::new();
+    markdown = match entity {
         MediaText => {
-            let markdown = content.text.clone();
+            let md = process_media_text(content.clone()).await;
             // need to iterate over the entities in MediaText.entities, and properly format the markdown
             log::debug!(
                 "TODO: needs to be implemented for mediatext, so media->text->parse entities"
             );
-            log::debug!("plain text is: {}", markdown);
-            !todo!("Proper implementation for MediaText is still missing");
+            md
         }
-    }
+    };
+    log::debug!("plain text is: {}", markdown);
+    log::warn!("{:#?} not implemented", content);
     log::debug!("found {}", content.entities.len());
+    //    !todo!("Proper implementation for MediaText is still missing");
+    append_to_brain(&markdown, SecondBrainSupportedFormats::Markdown)?;
+    Ok(())
 }
-
-//             let text_url = &content.text[entity.offset..entity.length];
-//             let text_part = &content.text[0..entity.offset];
-//             let title_url = match get_website_title(text_url).await {
-//                 Ok(title) => title.to_string(),
-//                 Err(e) => {
-//                     log::debug!("{:?}\n error invoked from {}", e, line!());
-//                     "error in url".to_string()
-//                 }
-//             };
-//             log::debug!("Url detected");
-//             let markdown;
-//             let real_url = &text_url.to_string();
-//             let real_tex = &content.text.to_string();
-//             if real_url != real_tex {
-//                 markdown = format!("- {} [{}]({})\n", text_part, title_url.trim(), text_url);
-//             } else {
-//                 markdown = format!("- [{}]({})\n", title_url.trim(), text_url);
-//             };
-//             // let markdown = format!(format, text_part, text_url, entity.kind);
-//             log::debug!("will insert:");
-//             log::debug!("{}", markdown);
-//             // log::info!("object: {:#?}", full_url);
-//             match append_to_brain(&markdown, SecondBrainSupportedFormats::Markdown) {
-//                 Ok(()) => {
-//                     bot.send_message(chat_id, "Saved text link!")
-//                         .reply_to_message_id(message_id)
-//                         .await?
-//                 }
-//                 _ => panic!("could not append to BRAIN_LOCATION: {:?}", &markdown),
-//             };
-//         }
-//    }
 
 enum SecondBrainSupportedFormats {
     Markdown,
@@ -313,8 +260,9 @@ enum SecondBrainSupportedFormats {
 use teloxide::types::MessageEntityKind::*;
 use teloxide::types::*;
 
-fn process_media_text(text: MediaText) -> String {
+async fn process_media_text(text: MediaText) -> String {
     let mut markdown = String::new();
+    markdown.push_str(&text.text);
     for entity in text.entities.iter() {
         match entity.kind {
             MessageEntityKind::Bold => {
@@ -324,7 +272,23 @@ fn process_media_text(text: MediaText) -> String {
                 log::debug!("italic: : {:#?}", text.text);
             }
             MessageEntityKind::Url => {
-                markdown.push_str(&format!("{text} -[{}]({})\n", text.text, text.text));
+                log::debug!("url: : {:#?}", text.clone());
+                log::debug!("url: : {:#?},\n{:#?}", markdown.clone(), entity);
+                // let text_url = &text.text[entity.offset..entity.length];
+                // let text_part = &text.text[0..entity.offset];
+                let title_url = match get_website_title(text.text.as_str()).await {
+                    Ok(title) => title.to_string(),
+                    Err(e) => {
+                        log::debug!("{:?}\n error invoked from {}", e, line!());
+                        "error in url".to_string()
+                    }
+                };
+                markdown.push_str(
+                    format!("\n    -[{}]({})\n", title_url.trim(), text.text.as_str()).as_str(),
+                );
+                // let markdown = format!(format, text_part, text_url, entity.kind);
+                log::debug!("will insert:");
+                log::debug!("{}", markdown);
             }
             _ => {
                 log::debug!("generic : {:#?}, {:#?}", text.text, entity.kind)
@@ -358,10 +322,7 @@ fn append_to_brain(text: &str, format: SecondBrainSupportedFormats) -> io::Resul
 async fn get_website_title(url: &str) -> Result<String, reqwest::Error> {
     let this_url = match reqwest::Url::parse(url) {
         Ok(result) => result,
-        Err(..) => match reqwest::Url::parse("foursixnine.io") {
-            Ok(result) => result,
-            Err(e) => panic!("Can't recover '{:#?}'\nurl:{}", e, url),
-        },
+        Err(e) => panic!("Can't recover '{:#?}'\nurl:{:#?}", url, e),
     };
 
     let title;
@@ -442,7 +403,7 @@ fn mimetype_has_title(_content_type: HeaderValue) -> bool {
     //     _ => false,
     //     None => panic!("No type found for: {:#?}", content_type),
     // }
-    todo!("Not implemented");
+    todo!("mimetype_has_title Not implemented");
 }
 
 fn parse_website_title(html: &str) -> String {
@@ -469,8 +430,6 @@ fn parse_website_title(html: &str) -> String {
 mod tests {
 
     use super::*;
-    use teloxide::types::MessageEntityKind::*;
-    use teloxide::types::*;
 
     #[tokio::test]
     #[should_panic]
@@ -481,8 +440,8 @@ mod tests {
         assert_eq!(expected, the_response);
     }
 
-    #[test]
-    fn test_media_text() {
+    #[tokio::test]
+    async fn test_media_text() {
         let media_text = MediaText {
             text: "https://www.theregister.com/2024/12/30/att_verizon_confirm_salt_typhoon_breach/"
                 .to_string(),
@@ -503,8 +462,8 @@ mod tests {
         assert_eq!(media_text.entities[0].length, 79);
     }
 
-    #[test]
-    fn test_media_text_with_multiple_entities() {
+    #[tokio::test]
+    async fn test_media_text_with_multiple_entities() {
         let media_text = MediaText {
             text: "Check this out: https://example.com and https://anotherexample.com".to_string(),
             entities: vec![
@@ -531,13 +490,13 @@ mod tests {
 
         let simple_markdown = process_media_text(media_text);
         assert_eq!(
-            simple_markdown,
+            simple_markdown.await,
             "Check this out: https://example.com and https://anotherexample.com"
         );
     }
 
-    #[test]
-    fn test_media_text_with_many_entities() {
+    #[tokio::test]
+    async fn test_media_text_with_many_entities() {
         let media_text = MediaText {
     text: "Five whys (or 5 whys) is an iterative interrogative technique used to explore the cause-and-effect relationships underlying a particular problem.[1] The primary goal of the technique is to determine the root cause of a defect or problem by repeating the question \"why?\" five times, each time directing the current \"why\" to the answer of the previous \"why\". The method asserts that the answer to the fifth \"why\" asked in this manner should reveal the root cause of the problem.[2]".to_string(),
     entities: [
@@ -572,7 +531,7 @@ mod tests {
             "Five whys (or 5 whys) is an iterative interrogative technique used to explore the cause-and-effect relationships underlying a particular problem.[1] The primary goal of the technique is to determine the root cause of a defect or problem by repeating the question \"why?\" five times, each time directing the current \"why\" to the answer of the previous \"why\". The method asserts that the answer to the fifth \"why\" asked in this manner should reveal the root cause of the problem.[2]"
         );
         assert_eq!(media_text.entities.len(), 4);
-        let markdown = process_media_text(media_text);
+        let markdown = process_media_text(media_text).await;
         assert_eq!(markdown, "Hello world");
     }
     // #[test]
