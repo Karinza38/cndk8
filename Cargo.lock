@@ -2105,6 +2105,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "second_brain"
+version = "0.1.0"
+
+[[package]]
 name = "security-framework"
 version = "2.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"

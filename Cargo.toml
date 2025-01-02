@@ -16,10 +16,13 @@ path = "src/lib/mod.rs"
 path = "src/rng.rs"
 name = "rng"
 
+[[bin]]
+path = "telegram/src/main.rs"
+name = "cndk8-telegram"
+
 [workspace]
 name = "cndk8-tools"
 members = ["telegram", "managers/second_brain"]
-exclude =  ["duplicate_detection",]
 
 
 [dependencies]
