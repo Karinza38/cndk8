@@ -1,4 +1,7 @@
-use crate::managers::second_brain::second_brain_manager::*;
+use managers::second_brain::second_brain_manager::{
+    SecondBrainManager, SecondBrainSupportedFormats,
+};
+
 use reqwest::{header::*, Error};
 use teloxide::{
     dispatching::{dialogue, dialogue::InMemStorage, UpdateHandler},
@@ -8,8 +11,6 @@ use teloxide::{
     utils::command::BotCommands,
 };
 use tokio::fs;
-
-extern crate mime;
 
 use scraper::{Html, Selector};
 
