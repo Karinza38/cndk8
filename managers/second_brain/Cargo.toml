@@ -1,9 +1,0 @@
-[package]
-name = "second_brain"
-version = "0.1.0"
-edition = "2021"
-
-[dependencies]
-
-[lib]
-path = "second_brain_manager.rs"

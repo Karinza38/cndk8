@@ -9,9 +9,6 @@ keywords = ["bots", "SecondBrain", "teloxide-bots", "telegram"]
 categories = ["command-line-utilities"]
 license = "GPL-3.0-only"
 
-[lib]
-path = "src/lib/mod.rs"
-
 [[bin]]
 path = "src/rng.rs"
 name = "rng"
