@@ -32,13 +32,10 @@ jobs:
       - name: Ouput rust version for educational purposes
         run: rustup --version
       - name: Build binaries in debug mode
-        run: cargo build
-      - name: Run tests in debug mode
-        run: cargo test 
+        run: cargo build -p telegram
       - name: Run tests in debug mode for Telegram bot project
         run: cargo test -p telegram
   build_nightly:
-    needs: build
     runs-on: ubuntu-latest
     outputs:
       release_built: ${{ steps.set-output.outputs.release_built }}
@@ -57,9 +54,7 @@ jobs:
       - name: Ouput rust version for educational purposes
         run: rustup --version
       - name: Build binaries in debug mode
-        run: cargo build
-      - name: Run tests in debug mode
-        run: cargo test 
+        run: cargo build -p telegram
       - name: Run tests in debug mode for Telegram bot project
         run: cargo test -p telegram
       - name: revert the override 

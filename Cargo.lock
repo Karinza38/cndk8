@@ -285,6 +285,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "cndk8-managers"
+version = "0.1.0"
+
+[[package]]
 name = "colorchoice"
 version = "1.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2105,10 +2109,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "second_brain"
-version = "0.1.0"
-
-[[package]]
 name = "security-framework"
 version = "2.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2665,6 +2665,7 @@ checksum = "20f34339676cdcab560c9a82300c4c2581f68b9369aedf0fae86f2ff9565ff3e"
 name = "telegram"
 version = "0.1.0"
 dependencies = [
+ "cndk8-managers",
  "log",
  "mime",
  "mockito",
