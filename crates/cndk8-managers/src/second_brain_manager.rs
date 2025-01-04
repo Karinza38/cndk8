@@ -1,5 +1,3 @@
-// cndk8/managers/second_brain_manager.rs
-
 use std::fs::OpenOptions;
 use std::io::{self, Write};
 
@@ -40,5 +38,24 @@ mod tests {
         let result =
             SecondBrainManager::append_to_brain("test", SecondBrainSupportedFormats::Markdown);
         assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_get_brain_location() {
+        unsafe {
+            std::env::set_var("BRAIN_LOCATION", "test_brain_location");
+        }
+        let location = get_brain_location();
+        assert_eq!(location, "test_brain_location");
+    }
+
+    #[test]
+    fn test_append_to_brain_no_space() {
+        unsafe {
+            std::env::set_var("BRAIN_LOCATION", "test.md");
+        }
+        let result =
+            SecondBrainManager::append_to_brain("test", SecondBrainSupportedFormats::Markdown);
+        assert!(result.is_err());
     }
 }

@@ -17,6 +17,9 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        package: [cndk8-managers, telegram, cndk8]
     outputs:
       release_built: ${{ steps.set-output.outputs.release_built }}
     steps:
@@ -32,10 +35,13 @@ jobs:
       - name: Ouput rust version for educational purposes
         run: rustup --version
       - name: Build binaries in debug mode
-        run: cargo build -p telegram
-      - name: Run tests in debug mode for Telegram bot project
-        run: cargo test -p telegram
+        run: cargo build  -p ${{ matrix.package }}
+      - name: Run tests in debug mode for per project
+        run: cargo test  -p ${{ matrix.package }}
   build_nightly:
+    strategy:
+      matrix:
+        package: [cndk8-managers, telegram, cndk8]
     runs-on: ubuntu-latest
     outputs:
       release_built: ${{ steps.set-output.outputs.release_built }}
@@ -53,10 +59,8 @@ jobs:
         run: rustup override set nightly
       - name: Ouput rust version for educational purposes
         run: rustup --version
-      - name: Build binaries in debug mode
-        run: cargo build -p telegram
-      - name: Run tests in debug mode for Telegram bot project
-        run: cargo test -p telegram
+      - name: Run tests in debug mode for per project
+        run: cargo test  -p ${{ matrix.package }}
       - name: revert the override 
         run: rustup override set nightly
   publish:
