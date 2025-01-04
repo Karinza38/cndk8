@@ -22,6 +22,8 @@ serde = { version = "1.0", features = ["derive"] }
 reqwest = "0.11.16"
 url = "2.3.1"
 scraper = "0.16.0"
+cndk8-managers = { path = "../crates/cndk8-managers/" }
+
 
 [dev-dependencies]
 mockito = "1.0.2"

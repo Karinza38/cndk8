@@ -18,8 +18,8 @@ path = "telegram/src/main.rs"
 name = "cndk8-telegram"
 
 [workspace]
-name = "cndk8-tools"
-members = ["telegram", "managers/second_brain"]
+name = "cndk8-bot"
+members = ["telegram"]
 
 
 [dependencies]

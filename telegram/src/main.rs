@@ -1,6 +1,4 @@
-use managers::second_brain::second_brain_manager::{
-    SecondBrainManager, SecondBrainSupportedFormats,
-};
+use cndk8_managers::second_brain_manager::{SecondBrainManager, SecondBrainSupportedFormats};
 
 use reqwest::{header::*, Error};
 use teloxide::{
@@ -208,7 +206,7 @@ async fn handle_photo_content(
     log::debug!("will insert:");
     log::debug!("{}", markdown);
     // log::info!("object: {:#?}", full_url);
-    match SecondBrainManager.append_to_brain(&markdown, SecondBrainSupportedFormats::Markdown) {
+    match SecondBrainManager::append_to_brain(&markdown, SecondBrainSupportedFormats::Markdown) {
         Ok(()) => {
             bot.send_message(chat_id, "Saved photo!")
                 .reply_to_message_id(message_id)
@@ -251,10 +249,6 @@ async fn handle_text_content(
     //    !todo!("Proper implementation for MediaText is still missing");
     SecondBrainManager::append_to_brain(&markdown, SecondBrainSupportedFormats::Markdown)?;
     Ok(())
-}
-
-enum SecondBrainSupportedFormats {
-    Markdown,
 }
 
 use teloxide::types::MessageEntityKind::*;
