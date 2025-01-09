@@ -12,14 +12,6 @@ use tokio::fs;
 
 use scraper::{Html, Selector};
 
-// fn _get_api_key() -> String {
-//     match std::env::var("HETZNER_API_KEY") {
-//         Ok(key) => key,
-//         Err(_) => {
-//             panic!("Please set the HETZNER_API_KEY environment variable");
-//         }
-//     }
-// }
 
 type MyDialogue = Dialogue<State, InMemStorage<State>>;
 type HandlerResult = Result<(), Box<dyn std::error::Error + Send + Sync>>;
@@ -147,15 +139,6 @@ async fn handle_message(bot: Bot, _dialogue: MyDialogue, msg: Message) -> Handle
                 MediaKind::Text(content) => {
                     handle_text_content(bot.clone(), msg.chat.id, msg.id, Some(content)).await?;
                 }
-                MediaKind::Photo(content) => {
-                    bot.send_message(msg.chat.id, "Got Photo!")
-                        .reply_to_message_id(msg.id)
-                        .await?;
-                    handle_photo_content(bot.clone(), msg.chat.id, msg.id, Some(content.clone()))
-                        .await?;
-                    //log::debug!("{:#?}", content);
-                    // to download the photo
-                }
                 _ => {
                     bot.send_message(msg.chat.id, "Media::Kind Type not implemented")
                         .reply_to_message_id(msg.id)
@@ -176,44 +159,6 @@ async fn handle_message(bot: Bot, _dialogue: MyDialogue, msg: Message) -> Handle
     let msg_id = hm.id;
     log::debug!("message id: {:#?}", &msg_id);
     bot.delete_message(msg.chat.id, msg_id).await?;
-    Ok(())
-}
-
-async fn handle_photo_content(
-    bot: Bot,
-    chat_id: ChatId,
-    message_id: MessageId,
-    message_photo: Option<MediaPhoto>,
-) -> HandlerResult {
-    bot.send_message(chat_id, "Got Photo!")
-        .reply_to_message_id(message_id)
-        .await?;
-    let content = message_photo.unwrap();
-    log::info!("photo: {:#?}", content);
-    // log::debug!("object: {:#?}", content);
-    let photo = content.photo.last().unwrap();
-    let file = bot.get_file(photo.file.id.clone()).await?;
-    let file_id = file.path.clone();
-    let file_name = file_id.split('/').last().unwrap();
-    let file_path = format!("./tmp/tg/{}", file_name);
-    log::debug!("file_path: {}", file_path);
-    fs::create_dir_all("./tmp/tg/").await?;
-    let mut file = fs::File::create(file_path.clone()).await?;
-    log::debug!("Debugging file:\n{:#?}", file);
-    bot.download_file(&file_id, &mut file).await?;
-    let markdown = format!("- ![{}]({})\n", &file_path, &file_path);
-    // let markdown = format!(format, text_part, text_url, entity.kind);
-    log::debug!("will insert:");
-    log::debug!("{}", markdown);
-    // log::info!("object: {:#?}", full_url);
-    match SecondBrainManager::append_to_brain(&markdown, SecondBrainSupportedFormats::Markdown) {
-        Ok(()) => {
-            bot.send_message(chat_id, "Saved photo!")
-                .reply_to_message_id(message_id)
-                .await?
-        }
-        _ => panic!("{:?}", &markdown),
-    };
     Ok(())
 }
 
@@ -369,21 +314,6 @@ async fn get_website_title(url: &str) -> Result<String, reqwest::Error> {
     }
 
     Ok(title)
-}
-
-// trait From<T> :Sized {
-//     fn from(&self) -> Self;
-// }
-
-fn mimetype_has_title(_content_type: HeaderValue) -> bool {
-    // let mime_type: Mime = content_type;
-
-    // match mime_type {
-    //     Some(mime::TEXT_HTML) => true,
-    //     _ => false,
-    //     None => panic!("No type found for: {:#?}", content_type),
-    // }
-    todo!("mimetype_has_title Not implemented");
 }
 
 fn parse_website_title(html: &str) -> String {
