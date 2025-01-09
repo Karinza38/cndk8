@@ -25,13 +25,10 @@ Application spawns a webservice and bot is a separate service, both start togeth
 
 ### BUILDING
 
+Required development libraries
+
+- openssl-devel
 ```
-git clone https://github.com/corrosion-rs/corrosion.git
-# Optionally, specify -DCMAKE_INSTALL_PREFIX=<target-install-path>. You can install Corrosion anyway
-cmake -Scorrosion -Bbuild -DCMAKE_BUILD_TYPE=Release
-cmake --build build --config Release
-# This next step may require sudo or admin privileges if you're installing to a system location,
-# which is the default.
-cmake --install build --config Release
+cargo build
 ```
 

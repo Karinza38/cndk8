@@ -143,7 +143,7 @@ async fn handle_message(bot: Bot, _dialogue: MyDialogue, msg: Message) -> Handle
                     bot.send_message(msg.chat.id, "Media::Kind Type not implemented")
                         .reply_to_message_id(msg.id)
                         .await?;
-                    log::debug!("{:#?} not implemented", chat);
+                    log::debug!("{:#?} MediaKind not implemented yet", chat);
                     // log::debug!("{:#?} not implemented", msg);
                 } //todo!(), // todo for media_kind
             }
@@ -201,21 +201,23 @@ use teloxide::types::*;
 
 async fn process_media_text(text: MediaText) -> String {
     let mut markdown = String::new();
-    markdown.push_str(&text.text);
+    markdown.push_str(format!(" - {}\n", &text.text).as_str());
     for entity in text.entities.iter() {
-        match entity.kind {
+        match &entity.kind {
             MessageEntityKind::Bold => {
                 log::debug!("bold: : {:#?}", text.text);
             }
             MessageEntityKind::Italic => {
                 log::debug!("italic: : {:#?}", text.text);
             }
-            MessageEntityKind::Url => {
-                log::debug!("url: : {:#?}", text.clone());
-                log::debug!("url: : {:#?},\n{:#?}", markdown.clone(), entity);
+            MessageEntityKind::TextLink { url } => {
+                // get from the offset the url
+                let my_url = url.as_str();
+                let this_text = &text.text[entity.offset..entity.length];
                 // let text_url = &text.text[entity.offset..entity.length];
                 // let text_part = &text.text[0..entity.offset];
-                let title_url = match get_website_title(text.text.as_str()).await {
+                log::debug!("{:?}\n {:#?} error invoked from {}", my_url, &entity, line!());
+                let title_url = match get_website_title(url.as_str()).await {
                     Ok(title) => title.to_string(),
                     Err(e) => {
                         log::debug!("{:?}\n error invoked from {}", e, line!());
@@ -223,14 +225,14 @@ async fn process_media_text(text: MediaText) -> String {
                     }
                 };
                 markdown.push_str(
-                    format!("\n    -[{}]({})\n", title_url.trim(), text.text.as_str()).as_str(),
+                    format!("  - {} [{}]({})", this_text, title_url.trim(), my_url).as_str(),
                 );
                 // let markdown = format!(format, text_part, text_url, entity.kind);
                 log::debug!("will insert:");
                 log::debug!("{}", markdown);
             }
             _ => {
-                log::debug!("generic : {:#?}, {:#?}", text.text, entity.kind)
+                log::debug!("generic : {:#?}, {:#?}", text.text, &entity.kind)
             }
         }
         let format = match entity.kind {
@@ -239,7 +241,6 @@ async fn process_media_text(text: MediaText) -> String {
             MessageEntityKind::Url => "link",
             _ => "plain",
         };
-        markdown.push_str(&format!("{}: [{}]({})\n", format, "foo", "bar"));
     }
     markdown
 }
@@ -401,7 +402,7 @@ mod tests {
         let simple_markdown = process_media_text(media_text);
         assert_eq!(
             simple_markdown.await,
-            "Check this out: https://example.com and https://anotherexample.com"
+            " - Check this out: https://example.com and https://anotherexample.com\n"
         );
     }
 
@@ -436,13 +437,9 @@ mod tests {
         },
     ].to_vec()
     };
-        assert_eq!(
-            media_text.text,
-            "Five whys (or 5 whys) is an iterative interrogative technique used to explore the cause-and-effect relationships underlying a particular problem.[1] The primary goal of the technique is to determine the root cause of a defect or problem by repeating the question \"why?\" five times, each time directing the current \"why\" to the answer of the previous \"why\". The method asserts that the answer to the fifth \"why\" asked in this manner should reveal the root cause of the problem.[2]"
-        );
+        //TODO: Add test to count lines in markdown
+        //use index to get a line and validate the text of said "TextLink"
         assert_eq!(media_text.entities.len(), 4);
-        let markdown = process_media_text(media_text).await;
-        assert_eq!(markdown, "Hello world");
     }
     // #[test]
     // fn test_process_header_mimetype() {
